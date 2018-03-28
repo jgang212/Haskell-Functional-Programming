@@ -34,7 +34,7 @@ but a magnitude of 1. In short, the new vector is the original vector scaled by
 the inverse of its length. -}
 normalize :: Vec2 -> Vec2
 normalize vec = let vecLen = vec2Length vec     --Assume vecLen is not zero
-                        in (fst vec / vecLen, snd vec / vecLen)
+                in (fst vec / vecLen, snd vec / vecLen)
                         
                         
 {- Checks to see if two vectors are equal to each other -}
@@ -52,7 +52,7 @@ checkDouble :: Double -> Double -> String
 checkDouble got expected = printMessage where 
           printMessage = if got == expected  then  "Test Passed" 
                          else   "Test Failed, Got: " ++ show got ++ 
-                                         ", Expected: "  ++ show expected
+                                ", Expected: "  ++ show expected
 
 
 {- Holds a list of test cases for the vector functions -}
