@@ -43,7 +43,16 @@ getCoor (Point _ a) = a
 {- length': get the length of a list -}
 length' :: [a] -> Integer
 length' [] = 0                         
-length' (_:xs) = 1 + length' xs    
+length' (_:xs) = 1 + length' xs
+
+{- getDistance: returns the distance between two 2D points -}
+getDistance :: Point Double -> Point Double -> Double
+getDistance a b = let aCoor = getCoor a
+                      bCoor = getCoor b
+                  in sqrt $ (aCoor!!0 - bCoor!!0) ^ 2 + (aCoor!!1 - bCoor!!1) ^ 2
+
+{- isRightTri: return whether a set of 3 2D points forms a right triangle -}
+{-isRightTri :: [Point Double] -> Bool-}
 
 {--------------------------------------------------------}
 
@@ -145,4 +154,9 @@ isValid (x:xs) =
     Theorem to determine if the three points make a valid right triangle.-}
     
 findRightTris :: [[Point Double]] -> Maybe [Integer]
+findRightTris [] = Nothing
     
+
+
+
+
