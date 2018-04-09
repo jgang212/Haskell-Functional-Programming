@@ -51,8 +51,37 @@ getDistance a b = let aCoor = getCoor a
                       bCoor = getCoor b
                   in sqrt $ (aCoor!!0 - bCoor!!0) ^ 2 + (aCoor!!1 - bCoor!!1) ^ 2
 
+{- isPythagoreanTrip: returns True if the set of distances form a Pythagorean 
+    triple -}
+isPythagoreanTrip :: [Double] -> Bool
+isPythagoreanTrip a = sqrt((a!!0) ^ 2 + (a!!1) ^ 2) == a!!2
+                  
 {- isRightTri: return whether a set of 3 2D points forms a right triangle -}
-{-isRightTri :: [Point Double] -> Bool-}
+isRightTri :: [Point Double] -> Bool
+isRightTri a = let dist1 = getDistance (a!!0) (a!!1)
+                   dist2 = getDistance (a!!0) (a!!2)
+                   dist3 = getDistance (a!!1) (a!!2)
+               in 
+               if dist1 < dist2 then
+                   if dist2 < dist3 then isPythagoreanTrip [dist1, dist2, dist3]
+                   else if dist1 < dist3 then isPythagoreanTrip [dist1, dist3, dist2]
+                   else isPythagoreanTrip [dist3, dist1, dist2]
+               else
+                   if dist1 < dist3 then isPythagoreanTrip [dist2, dist1, dist3]
+                   else if dist2 < dist3 then isPythagoreanTrip [dist2, dist3, dist1]
+                   else isPythagoreanTrip [dist3, dist2, dist1]
+                  
+{- findRightTrisHelper: helper function for findRindTris that uses a counter to
+    keep track of indices -}
+findRightTrisHelper :: [[Point Double]] -> Integer -> [Integer]
+findRightTrisHelper [] _ = []
+findRightTrisHelper (x:xs) c = 
+    if (length' (findPoint Point2D x) == 3) && (isValid x) then
+        if isRightTri x then
+            addLists [c] (findRightTrisHelper xs (c+1))
+        else findRightTrisHelper xs (c+1)
+    else
+        findRightTrisHelper xs (c+1)
 
 {--------------------------------------------------------}
 
@@ -155,7 +184,9 @@ isValid (x:xs) =
     
 findRightTris :: [[Point Double]] -> Maybe [Integer]
 findRightTris [] = Nothing
-    
+findRightTris a = if length' (findRightTrisHelper a 0) == 0
+                      then Nothing
+                  else Just (findRightTrisHelper a 0)
 
 
 
