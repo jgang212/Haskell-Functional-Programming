@@ -57,7 +57,7 @@ instance Eq Strand where
 instance Eq Helix where
     (==) (Helix bpList1) (Helix bpList2) =
             bpList1 == bpList2
-
+            
 {-
     wccHelix :: Strand -> Helix. 
     Given a Strand, generate a Helix.
@@ -76,7 +76,7 @@ instance Eq Helix where
 -} 
 
 wccHelix :: Strand -> Helix
-wccHelix (Strand bases) = Strand [map show bases]
+wccHelix (Strand bases) = Helix (map (\b -> if b == A then BasePair b T else if b == T then BasePair b A else if b == C then BasePair b G else if b == G then BasePair b C else error "INVALID BASE") bases)
 
 {- 
     makeHelix :: String -> Helix. 
@@ -93,10 +93,12 @@ wccHelix (Strand bases) = Strand [map show bases]
 
 
     Example: 
-    Main*> makeHelix “ACTG" 
+    Main*> makeHelix "ACTG" 
     [(A,T),(C,G),(T,A),(G,C)]
 -} 
 
+makeHelix :: String -> Helix
+makeHelix str = Helix (map (\s -> if s == 'A' then BasePair A T else if s == 'T' then BasePair T A else if s == 'C' then BasePair C G else if s == 'G' then BasePair G C else error "INVALID BASE") str)
 
 {- 
    willAnneal :: Strand -> Strand -> Bool. 
@@ -114,3 +116,6 @@ wccHelix (Strand bases) = Strand [map show bases]
    Main*> willAnneal (Strand [A,C,T,T]) (Strand [T,G,A,C])
    False
 -} 
+
+willAnneal :: Strand -> Strand -> Bool
+willAnneal (Strand bases1) (Strand bases2) = map (\b -> if b == A then T else if b == T then A else if b == C then G else if b == G then C else error "INVALID BASE") bases1 == bases2

@@ -30,7 +30,7 @@ addLists :: [a] -> [a] -> [a]
 addLists [] ys = ys
 addLists (x:xs) ys = x : addLists xs ys
 
-{- -}
+{- MAIN FUNCTIONS -}
 
 {- listRange : takes a Int list and a range that is represent by a Int tuple 
     and returns a Int list of the elements inside the input list within a given
@@ -61,6 +61,8 @@ dedupe f lst = addLists (map (fst) . filter (\(a,b) -> not (f a b)) $ zip' lst (
 {- prefixes : takes in a Int list and returns a list of all non-empty prefixes 
     of a list, ordered from shortest to longest. -}
 
+{- TODO: need to remove empty prefix -}
+    
 prefixes :: [Int] -> [[Int]]
 prefixes [] = [[]]
 prefixes (x:xs) = [] : map (x:) (prefixes xs)
@@ -69,8 +71,9 @@ prefixes (x:xs) = [] : map (x:) (prefixes xs)
     contiguous sublist of length k whose elements have the largest sum. -}
 
 kSublist :: [Int] -> Int -> [Int]
-kSublist [] l = 0
-kSublist (x:xs) l = 
+kSublist [] len = []
+kSublist (x:xs) len = if len == foldr (\_ accum -> 1 + accum) 0 (x:xs) then (x:xs)                          
+                      else [5]
 
 
 
