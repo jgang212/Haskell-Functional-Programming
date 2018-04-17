@@ -75,6 +75,9 @@ instance Eq Helix where
     [(A,T),(T,A),(C,G),(G,C)] 
 -} 
 
+wccHelix :: Strand -> Helix
+wccHelix (Strand bases) = Strand [map show bases]
+
 {- 
     makeHelix :: String -> Helix. 
     Given a String of base letters, make a Helix.
