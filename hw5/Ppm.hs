@@ -9,11 +9,28 @@ setInputAndOutput = do
     outputStr <- getLine
     return (inputStr, outputStr) 
 
-imageLoop :: PPMImage a -> String -> IO ()
+imageLoop :: PPMImage (Pixel Integer) -> String -> IO ()
 imageLoop ppm output = do
+    putStrLn (show ppm)
     decision <- mainMenu
     if decision == 1 then do
+        let newPPM = fmap negateR $ ppm
         putStrLn "Reg-negated input PPM image."
+        imageLoop newPPM output
+    else if decision == 2 then do
+        let newPPM = fmap negateG $ ppm
+        putStrLn "Green-negated input PPM image."
+        imageLoop newPPM output
+    else if decision == 3 then do
+        let newPPM = fmap negateB $ ppm
+        putStrLn "Blue-negated input PPM image."
+        imageLoop newPPM output
+    else if decision == 4 then do
+        let newPPM = fmap greyScale $ ppm
+        putStrLn "Grey-scaled input PPM image."
+        imageLoop newPPM output
+    else if decision == 7 then do
+        putStrLn "Saved current PPM to output file."
     else do
         putStrLn "asdf"
 
