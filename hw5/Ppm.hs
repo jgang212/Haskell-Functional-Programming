@@ -42,6 +42,25 @@ isStrNumber :: String -> Bool
 isStrNumber ""  = True
 isStrNumber (x:xs) = (isDigit x || x == ' ') && (isStrNumber xs)
 
+pixelListToPixels :: [String] -> [Pixel Integer]
+pixelListToPixels [] = []
+pixelListToPixels [x] = []
+pixelListToPixels [x, _] = []
+pixelListToPixels (x:y:z:xs) = [Pixel (read x :: Integer, read y :: Integer, read z :: Integer)] ++ pixelListToPixels xs
+
+makeImageBodyList :: [String] -> [Pixel Integer]
+makeImageBodyList [] = []
+makeImageBodyList (x:xs) = let dataLine = words x
+                           in pixelListToPixels dataLine ++ makeImageBodyList xs
+
+getPPMFromData :: [String] -> PPMImage (Pixel Integer)
+getPPMFromData ppmData = let mn = toInteger (digitToInt (ppmData!!0!!1))
+                             w = read ((words (ppmData!!1))!!0) :: Integer
+                             h = read ((words (ppmData!!1))!!1) :: Integer
+                             mc = read (ppmData!!2) :: Integer
+                             body = makeImageBodyList ppmData
+                         in PPMImage w h mn mc body
+
 main :: IO () 
 main = do     
     files <- setInputAndOutput
@@ -52,8 +71,5 @@ main = do
         return ()
     else do
         let outputFile = snd files
-        let ppm = PPMImage 2 2 3 255 [(Pixel (255,0,255)),
-                              (Pixel (255,0,255)),
-                              (Pixel (255,0,255)),
-                              (Pixel (255,0,255))]
+        let ppm = getPPMFromData inputStrings
         imageLoop ppm outputFile
