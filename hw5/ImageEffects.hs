@@ -4,6 +4,16 @@
   Contains data types and image effect functions for PPM images.
 -}
 
+module ImageEffects
+(
+   PPMImage(..),
+   Pixel(..),
+   negateR,
+   negateG,
+   negateB,
+   greyScale
+) where
+
 data PPMImage a = PPMImage {width :: Integer, 
     height:: Integer,
     magicNumber :: Integer, 
