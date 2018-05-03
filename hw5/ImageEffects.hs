@@ -8,6 +8,7 @@ module ImageEffects
 (
    PPMImage(..),
    Pixel(..),
+   getValuesFromPixel,
    negateR,
    negateG,
    negateB,
@@ -22,6 +23,9 @@ data PPMImage a = PPMImage {width :: Integer,
     deriving (Show)
 
 newtype Pixel a = Pixel (a,a,a) deriving (Show)
+
+getValuesFromPixel :: Pixel a -> [a]
+getValuesFromPixel (Pixel (x, y, z)) = [x, y, z]
 
 instance Functor PPMImage where
     fmap f (PPMImage w h mn mc p) = PPMImage w h mn mc (map f p)

@@ -11,7 +11,7 @@ setInputAndOutput = do
 
 imageLoop :: PPMImage (Pixel Integer) -> String -> IO ()
 imageLoop ppm output = do
-    putStrLn (show ppm)
+    --putStrLn (show ppm)
     decision <- mainMenu
     if decision == 1 then do
         let newPPM = fmap negateR $ ppm
@@ -30,7 +30,14 @@ imageLoop ppm output = do
         putStrLn "Grey-scaled input PPM image."
         imageLoop newPPM output
     else if decision == 7 then do
+        writeFile output $ ("P" ++ (show (magicNumber ppm)) ++ "\n" ++ 
+                            (show (width ppm)) ++ " " ++ (show (height ppm)) ++ "\n" ++
+                            (show (maxColor ppm)) ++ "\n" ++
+                            interspersePixelSpace (getOutputFromPixels (pixels ppm)))
         putStrLn "Saved current PPM to output file."
+        imageLoop ppm output
+    else if decision == 8 then do
+        return ()
     else do
         putStrLn "asdf"
 
@@ -44,6 +51,7 @@ mainMenu = do
     putStrLn "(5) Edge detection"
     putStrLn "(6) Sharpen"
     putStrLn "(7) Save to output file"
+    putStrLn "(8) Exit"
     putStr  "Option: \n"
     optStr <- getLine 
     let optionInt = read optStr :: Int 
@@ -59,16 +67,16 @@ isStrNumber :: String -> Bool
 isStrNumber ""  = True
 isStrNumber (x:xs) = (isDigit x || x == ' ') && (isStrNumber xs)
 
-pixelListToPixels :: [String] -> [Pixel Integer]
-pixelListToPixels [] = []
-pixelListToPixels [x] = []
-pixelListToPixels [x, _] = []
-pixelListToPixels (x:y:z:xs) = [Pixel (read x :: Integer, read y :: Integer, read z :: Integer)] ++ pixelListToPixels xs
+pixelLineToPixels :: [String] -> [Pixel Integer]
+pixelLineToPixels [] = []
+pixelLineToPixels [x] = []
+pixelLineToPixels [x, _] = []
+pixelLineToPixels (x:y:z:xs) = [Pixel (read x :: Integer, read y :: Integer, read z :: Integer)] ++ pixelLineToPixels xs
 
 makeImageBodyList :: [String] -> [Pixel Integer]
 makeImageBodyList [] = []
 makeImageBodyList (x:xs) = let dataLine = words x
-                           in pixelListToPixels dataLine ++ makeImageBodyList xs
+                           in pixelLineToPixels dataLine ++ makeImageBodyList xs
 
 getPPMFromData :: [String] -> PPMImage (Pixel Integer)
 getPPMFromData ppmData = let mn = toInteger (digitToInt (ppmData!!0!!1))
@@ -77,6 +85,14 @@ getPPMFromData ppmData = let mn = toInteger (digitToInt (ppmData!!0!!1))
                              mc = read (ppmData!!2) :: Integer
                              body = makeImageBodyList ppmData
                          in PPMImage w h mn mc body
+
+getOutputFromPixels :: [Pixel Integer] -> [Integer]
+getOutputFromPixels [] = []
+getOutputFromPixels (x:xs) = getValuesFromPixel x ++ getOutputFromPixels xs
+
+interspersePixelSpace :: [Integer] -> String
+interspersePixelSpace [] = []
+interspersePixelSpace (x:xs) = (show x) ++ " " ++ (interspersePixelSpace xs)
 
 main :: IO () 
 main = do     
