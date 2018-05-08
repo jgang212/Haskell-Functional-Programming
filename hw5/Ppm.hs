@@ -11,18 +11,18 @@ setInputAndOutput = do
 
 imageLoop :: PPMImage (Pixel Integer) -> String -> IO ()
 imageLoop ppm output = do
-    --putStrLn (show ppm)
+    putStrLn (show ppm)
     decision <- mainMenu
     if decision == 1 then do
-        let newPPM = fmap negateR $ ppm
-        putStrLn "Reg-negated input PPM image."
+        let newPPM = fmap (negateR (maxColor ppm)) $ ppm
+        putStrLn "Red-negated input PPM image."
         imageLoop newPPM output
     else if decision == 2 then do
-        let newPPM = fmap negateG $ ppm
+        let newPPM = fmap (negateG (maxColor ppm)) $ ppm
         putStrLn "Green-negated input PPM image."
         imageLoop newPPM output
     else if decision == 3 then do
-        let newPPM = fmap negateB $ ppm
+        let newPPM = fmap (negateB (maxColor ppm)) $ ppm
         putStrLn "Blue-negated input PPM image."
         imageLoop newPPM output
     else if decision == 4 then do
