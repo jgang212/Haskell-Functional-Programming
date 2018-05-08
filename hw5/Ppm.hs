@@ -11,7 +11,7 @@ setInputAndOutput = do
 
 imageLoop :: PPMImage (Pixel Integer) -> String -> IO ()
 imageLoop ppm output = do
-    putStrLn (show ppm)
+    --putStrLn (show ppm)
     decision <- mainMenu
     if decision == 1 then do
         let newPPM = fmap (negateR (maxColor ppm)) $ ppm
@@ -29,6 +29,16 @@ imageLoop ppm output = do
         let newPPM = fmap greyScale $ ppm
         putStrLn "Grey-scaled input PPM image."
         imageLoop newPPM output
+    else if decision == 5 then do
+        let kernel = [-1, -1, -1, -1, 8, -1, -1, -1, -1]
+            newPPM = PPMImage (width ppm) (height ppm) (magicNumber ppm) (maxColor ppm) (convolution ppm kernel 0 0)
+        putStrLn "Edge detection-ed input PPM image."
+        imageLoop newPPM output
+    else if decision == 6 then do
+        let kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0]
+            newPPM = PPMImage (width ppm) (height ppm) (magicNumber ppm) (maxColor ppm) (convolution ppm kernel 0 0)
+        putStrLn "Sharpened input PPM image."
+        imageLoop newPPM output
     else if decision == 7 then do
         writeFile output $ ("P" ++ (show (magicNumber ppm)) ++ "\n" ++ 
                             (show (width ppm)) ++ " " ++ (show (height ppm)) ++ "\n" ++
@@ -39,7 +49,8 @@ imageLoop ppm output = do
     else if decision == 8 then do
         return ()
     else do
-        putStrLn "asdf"
+        putStrLn "Invalid choice. Please try again."
+        imageLoop ppm output
 
 mainMenu :: IO Int  
 mainMenu = do 
