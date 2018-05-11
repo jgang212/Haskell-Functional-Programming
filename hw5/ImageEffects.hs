@@ -8,6 +8,7 @@ module ImageEffects
 (
    PPMImage(..),
    Pixel(..),
+   FixedPPMImage(..),
    getValuesFromPixel,
    negateR,
    negateG,
@@ -26,6 +27,12 @@ data PPMImage a = PPMImage {width :: Integer,
 newtype Pixel a = Pixel (a,a,a) deriving (Show)
 
 type Kernel = [Integer]
+
+newtype FixedPPMImage = FixedPPMImage {getImg:: PPMImage (Pixel Integer)} deriving (Show)
+
+instance Monoid (FixedPPMImage) where
+  mempty = FixedPPMImage (PPMImage 10 10 3 255 (replicate 100 (Pixel (0, 0, 0))))
+  x `mappend` y = FixedPPMImage (PPMImage 10 10 3 255 (addPixelLists (pixels $ getImg x) (pixels $ getImg y)))
 
 constrainPixelValue :: Integer -> Integer -> Integer
 constrainPixelValue val mc = if val > mc then mc
@@ -86,8 +93,15 @@ convolution ppm k startRow startCol = [Pixel (convolutionSingle ppm k startRow s
                                          else if (startCol+1) >= (width ppm) then convolution ppm k (startRow+1) 0
                                          else convolution ppm k startRow (startCol+1)
 
+addPixelLists :: [Pixel Integer] -> [Pixel Integer] -> [Pixel Integer]
+addPixelLists [] [] = []
+--addPixelLists [] _ = []
+addPixelLists (x:xs) (y:ys) = [Pixel (getR x + getR y, getG x + getG y, getB x + getB y)] ++ addPixelLists xs ys
+
 sharpenKernel = [0, -1, 0, -1, 5, -1, 0, -1, 0]
 
 testImage1 = PPMImage 3 3 3 255 [(Pixel (1,1,1)), (Pixel (2,2,2)), (Pixel (3,3,3)),
                                  (Pixel (4,4,4)), (Pixel (5,5,5)), (Pixel (6,6,6)),
                                  (Pixel (7,7,7)), (Pixel (8,8,8)), (Pixel (9,9,9))]
+
+testImage2 = FixedPPMImage (PPMImage 10 10 3 255 (replicate 100 (Pixel (1, 1, 1))))
