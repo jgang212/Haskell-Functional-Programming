@@ -4,6 +4,13 @@
   Contains data types and simulation functions for Schelling's model.
 -}
 
+module ModelCalcs
+(
+    HomeownerType(..),
+    Home(..),
+    City(..)
+) where
+
 import Debug.Trace
 
 {----------------- DATA TYPES -----------------}
