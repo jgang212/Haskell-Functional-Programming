@@ -10,11 +10,18 @@ import System.Environment
 import Data.Char
 import ModelCalcs
 
-data State = State {colors :: [Color], elaspedTime :: Float, cty :: City, rc :: (Integer, Integer)}
+data State = State {colors :: [Color], 
+                    cty :: City, 
+                    rc :: (Integer, Integer), 
+                    maxSteps :: Integer,
+                    threshold :: Double,
+                    radius :: Integer,
+                    curRound :: Integer}
 
 -- Represents the initial state for rendering to the screen [Red, Blue]
-initState :: City -> (Integer, Integer) -> State 
-initState cty (r, c) = State [makeColorI 255 0  0 255, makeColorI 0  0 255 255] 0 cty (r, c)
+initState :: City -> (Integer, Integer) -> Integer -> State 
+initState cty (r, c) ms = let simCity = calcSimScores 0 cty 1
+                          in State [makeColorI 255 0  0 255, makeColorI 0  0 255 255] simCity (r, c) ms 0.44 1 0
 
 -- The number of frames per second to render
 fps:: Int 
@@ -35,23 +42,40 @@ render :: State -> IO Picture
 render state = let
     {- NOTE: I'm making an assumption here that there will always be two rect colors in the state 
        thus I can use (!!)-}
+    totalHomes = fromIntegral (length (filter (\x -> (homeowner x) /= O) (cty state))) :: Float
+    satHomes = fromIntegral (length (filter (\x -> (simScore x) >= (threshold state)) (cty state))) :: Float
     title = scale 0.3 0.3.translate (-1350) 1100.text $ "Schelling's Model of Housing Segregation*"
-    --rect1 = translate 0  0.color((colors state) !! 0) $ rectangleSolid 50 50 
-    --rect2 = translate 100 0.color((colors state) !! 1) $ rectangleSolid 50 50
     rects = getRectanglesFromCity (cty state) state
+    round = scale 0.1 0.1.translate (-2500) (-2150).text $ "Round " ++ (show $ curRound state) ++ " of " ++ (show $ maxSteps state)
+    satis = scale 0.1 0.1.translate (-2500) (-2300).text $ "Satisfied: " ++ (show $ 100.0 * (satHomes / totalHomes)) ++ "%"
     in 
-        return $ pictures ([title] ++ rects)
+        return $ pictures ([title, round, satis] ++ rects)
 
-{- The event handlers handles events coming from the user: 
-   In this program we won't interact with the user. See "examples/updating" 
-   to see interaction with the user. 
--}
+{- The event handlers handles events coming from the user -}
 eventHandler :: Event -> State -> IO State 
-eventHandler event state = return state
+
+{- This pattern matches for Key Events -}
+eventHandler (EventKey (Char key) Up _ _) state@(State col city rowcol ms thres rad rnd) = let
+        openHomes = filter (\x -> homeowner x == O) city
+        in case key of 
+        's' -> return $ (State col (fst (simulate' 0 city openHomes rad thres)) rowcol ms thres rad (rnd+1))
+        otherwise  -> return state 
+{-
+{- This pattern matches for Special key Events-}
+eventHandler (EventKey (SpecialKey key) Up _ _) state = case key of  
+        -- Handles the events for the arrow keys 
+        KeyUp    -> return state 
+        KeyDown  -> return state  
+        KeyLeft  -> return state  
+        KeyRight -> return state  -}
+
+{- The catch all pattern -}
+eventHandler _ state = return state  
 
 {- The update loop function is used to update the current state of the application -}
 updateLoop :: Float -> State -> IO State 
-updateLoop deltaTime (State rectColors eTime cty (r,c)) = return (State rectColors eTime cty (r,c))
+--updateLoop deltaTime (State rectColors cty (r,c)) = return (State rectColors cty (r,c))
+updateLoop deltaTime st = return st
     {-eTime' = eTime + deltaTime 
     in 
         if eTime' > 1.0 
@@ -81,12 +105,12 @@ getColorFromType t st = if t == O then white
 getRectanglesFromCity :: City -> State -> [Picture]
 getRectanglesFromCity [] _ = []
 getRectanglesFromCity (x:xs) st = let (r,c) = rc st
-                                      rectH = 600.0 / (fromIntegral r :: Float)
-                                      rectW = 600.0 / (fromIntegral c :: Float)
+                                      rectH = 500.0 / (fromIntegral r :: Float)
+                                      rectW = 500.0 / (fromIntegral c :: Float)
                                       rindex = fromIntegral (fst $ coor x) :: Float
                                       cindex = fromIntegral (snd $ coor x) :: Float
                                       rectColor = getColorFromType (homeowner x) st
-                                      rectX = -250.0 + cindex*rectW
+                                      rectX = -215.0 + cindex*rectW
                                       rectY = 250.0 - rindex*rectH
                                  in [translate rectX rectY.color(rectColor) $ rectangleSolid rectW rectH]
                                     ++ [translate rectX rectY.color(black) $ rectangleWire rectW rectH]
@@ -134,7 +158,8 @@ main = do
                let r = read (inputStrings!!0) :: Integer
                let c = read (inputStrings!!1) :: Integer
                let cty = getCityFromData inputStrings
-               playIO window white fps (initState cty (r,c)) Main.render eventHandler updateLoop
+               let maxSteps = read (args!!0) :: Integer
+               playIO window white fps (initState cty (r,c) maxSteps) Main.render eventHandler updateLoop
            -- input grid size
            else do
                putStrLn "asdf."

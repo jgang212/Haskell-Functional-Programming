@@ -8,7 +8,9 @@ module ModelCalcs
 (
     HomeownerType(..),
     Home(..),
-    City(..)
+    City(..),
+    calcSimScores,
+    simulate'
 ) where
 
 import Debug.Trace
@@ -107,10 +109,10 @@ stepOnce i c open r thres = let h = c!!i
                                         (newCity, updateOpenList c open movingLocation (coor h)) --`debug` (show (i,newCity,updateOpenList c open movingLocation (coor h)))
                                    else (c, open) --`debug` (show (i,c,open))
 
-simulate :: Int -> City -> [Home] -> Integer -> Double -> (City, [Home])
-simulate i c open r thres = let (city, openHomes) = stepOnce i c open r thres
+simulate' :: Int -> City -> [Home] -> Integer -> Double -> (City, [Home])
+simulate' i c open r thres = let (city, openHomes) = stepOnce i c open r thres
                             in if (i+1) == (length c) then (city, openHomes)
-                               else simulate (i+1) city openHomes r thres
+                               else simulate' (i+1) city openHomes r thres
 
 testCity = [Home (0,0) R 0.0, Home (0,1) R 0.0, Home (0,2) O 0.0, Home (0,3) R 0.0, Home (0,4) R 0.0, 
             Home (1,0) O 0.0, Home (1,1) B 0.0, Home (1,2) B 0.0, Home (1,3) B 0.0, Home (1,4) O 0.0, 
