@@ -10,7 +10,8 @@ module ModelCalcs
     Home(..),
     City(..),
     calcSimScores,
-    simulate'
+    simulate',
+    isCitySatisfied
 ) where
 
 import Debug.Trace
@@ -93,7 +94,9 @@ moveLocations i c initCoor newCoor = let checkCoor = coor (c!!i)
 
 -- thresDiffs
 getBestThreshold :: [Double] -> Double
-getBestThreshold thresDiffs = minimum (filter (\x -> x > 0) thresDiffs)
+getBestThreshold thresDiffs = let positiveOpens = filter (\x -> x > 0) thresDiffs
+                              in if (length positiveOpens) > 0 then minimum positiveOpens
+                                 else -9.9
 
 -- 0 City openList radius threshold
 stepOnce :: Int -> City -> [Home] -> Integer -> Double -> (City, [Home])
@@ -113,6 +116,11 @@ simulate' :: Int -> City -> [Home] -> Integer -> Double -> (City, [Home])
 simulate' i c open r thres = let (city, openHomes) = stepOnce i c open r thres
                             in if (i+1) == (length c) then (city, openHomes)
                                else simulate' (i+1) city openHomes r thres
+
+isCitySatisfied :: City -> Double -> Bool
+isCitySatisfied [] _ = True
+isCitySatisfied (x:xs) thres = if (homeowner x) == O || (simScore x) >= thres then isCitySatisfied xs thres
+                                else False
 
 testCity = [Home (0,0) R 0.0, Home (0,1) R 0.0, Home (0,2) O 0.0, Home (0,3) R 0.0, Home (0,4) R 0.0, 
             Home (1,0) O 0.0, Home (1,1) B 0.0, Home (1,2) B 0.0, Home (1,3) B 0.0, Home (1,4) O 0.0, 

@@ -11,7 +11,8 @@ import Data.Char
 import ModelCalcs
 
 data State = State {colors :: [Color], 
-                    cty :: City, 
+                    cty :: City,
+                    initCty :: City,
                     rc :: (Integer, Integer), 
                     maxSteps :: Integer,
                     threshold :: Double,
@@ -21,7 +22,7 @@ data State = State {colors :: [Color],
 -- Represents the initial state for rendering to the screen [Red, Blue]
 initState :: City -> (Integer, Integer) -> Integer -> State 
 initState cty (r, c) ms = let simCity = calcSimScores 0 cty 1
-                          in State [makeColorI 255 0  0 255, makeColorI 0  0 255 255] simCity (r, c) ms 0.44 1 0
+                          in State [makeColorI 255 0  0 255, makeColorI 0  0 255 255] simCity cty (r, c) ms 0.44 1 0
 
 -- The number of frames per second to render
 fps:: Int 
@@ -29,7 +30,7 @@ fps = 60
 
 {- This window configuration information using the "InWindow" function to create the window.-}
 window :: Display 
-window = InWindow "Schelling’s Model" (1024,768) (10, 10)
+window = InWindow "Schelling’s Model" (1024,1024) (10, 10)
 
 {- This is an example of rendering a "Picture" to the screen. 
    I'm using functions that are part of the Graphics.Gloss.Picture module. 
@@ -43,31 +44,53 @@ render state = let
     {- NOTE: I'm making an assumption here that there will always be two rect colors in the state 
        thus I can use (!!)-}
     totalHomes = fromIntegral (length (filter (\x -> (homeowner x) /= O) (cty state))) :: Float
+    redHomes = fromIntegral (length (filter (\x -> (homeowner x) == R) (cty state))) :: Float
+    blueHomes = fromIntegral (length (filter (\x -> (homeowner x) == B) (cty state))) :: Float
     satHomes = fromIntegral (length (filter (\x -> (simScore x) >= (threshold state)) (cty state))) :: Float
-    title = scale 0.3 0.3.translate (-1350) 1100.text $ "Schelling's Model of Housing Segregation*"
     rects = getRectanglesFromCity (cty state) state
-    round = scale 0.1 0.1.translate (-2500) (-2150).text $ "Round " ++ (show $ curRound state) ++ " of " ++ (show $ maxSteps state)
-    satis = scale 0.1 0.1.translate (-2500) (-2300).text $ "Satisfied: " ++ (show $ 100.0 * (satHomes / totalHomes)) ++ "%"
+    status = if (curRound state) == 0 then "Start"
+             else if isCitySatisfied (cty state) (threshold state) then "Satisifed"
+             else if (curRound state) < (maxSteps state) then "Stepping"
+             else "Out of Steps"
+
+    title = scale 0.3 0.3.translate (-1350) 1100.text $ "Schelling's Model of Housing Segregation"    
+    round = scale 0.1 0.1.translate (-2500) (-2600).text $ "Round " ++ (show $ curRound state) ++ " of " ++ (show $ maxSteps state)
+    satis = scale 0.1 0.1.translate (-2500) (-2750).text $ "Satisfied: " ++ (show $ 100 * (satHomes / totalHomes)) ++ "%"
+    rad = scale 0.15 0.15.translate (-1700) (-2150).text $ "R-size: " ++ (show $ radius state)
+    thres = scale 0.15 0.15.translate (-1700) (-2300).text $ "Similar: " ++ (show $ (100 * (threshold state))) ++ "%"
+    percs = scale 0.15 0.15.translate (-1700) (-2450).text $ "Red/Blue: " ++ (show $ 100 * (redHomes / totalHomes)) ++ "%/"
+            ++ (show $ 100.0 * (blueHomes / totalHomes)) ++ "%"
+    empty = scale 0.15 0.15.translate (-1700) (-2600).text $ "Empty: " ++ (show $ 100 * (1 - totalHomes / fromIntegral (length (cty state)) :: Float)) ++ "%"
+    sz = scale 0.15 0.15.translate (-1700) (-2750).text $ "Size: " ++ (show (fst $ rc state)) ++ "x" ++ (show (snd $ rc state))
+    current = scale 0.15 0.15.translate (1300) (-1900).text $ "Status: " ++ status
     in 
-        return $ pictures ([title, round, satis] ++ rects)
+        return $ pictures ([title, round, satis, rad, thres, percs, empty, sz, current] ++ rects)
 
 {- The event handlers handles events coming from the user -}
 eventHandler :: Event -> State -> IO State 
 
 {- This pattern matches for Key Events -}
-eventHandler (EventKey (Char key) Up _ _) state@(State col city rowcol ms thres rad rnd) = let
+eventHandler (EventKey (Char key) Up _ _) state@(State col city initCity rowcol ms thres rad rnd) = let
         openHomes = filter (\x -> homeowner x == O) city
         in case key of 
-        's' -> return $ (State col (fst (simulate' 0 city openHomes rad thres)) rowcol ms thres rad (rnd+1))
+        's' -> if rnd < ms then 
+                   return $ (State col (fst (simulate' 0 city openHomes rad thres)) initCity rowcol ms thres rad (rnd+1))
+               else return state
+        'r' -> return (initState initCity rowcol ms)
         otherwise  -> return state 
-{-
+
 {- This pattern matches for Special key Events-}
-eventHandler (EventKey (SpecialKey key) Up _ _) state = case key of  
+eventHandler (EventKey (SpecialKey key) Up _ _) state@(State col city initCity rowcol ms thres rad rnd) = case key of  
         -- Handles the events for the arrow keys 
-        KeyUp    -> return state 
-        KeyDown  -> return state  
-        KeyLeft  -> return state  
-        KeyRight -> return state  -}
+        KeyUp    -> if (thres + 0.05) > 1 then return state
+                    else return $ (State col city initCity rowcol ms (thres+0.05) rad rnd)
+        KeyDown  -> if (thres - 0.05) < 0 then return state
+                    else return $ (State col city initCity rowcol ms (thres-0.05) rad rnd)
+        KeyRight  -> if rnd > 0 then return state
+                    else return $ (State col city initCity rowcol ms thres (rad+1) rnd)
+        KeyLeft -> if rnd > 0 then return state
+                    else if rad <= 1 then return state
+                    else return $ (State col city initCity rowcol ms thres (rad-1) rnd)
 
 {- The catch all pattern -}
 eventHandler _ state = return state  
