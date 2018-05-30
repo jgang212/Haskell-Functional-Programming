@@ -97,26 +97,7 @@ eventHandler _ state = return state
 
 {- The update loop function is used to update the current state of the application -}
 updateLoop :: Float -> State -> IO State 
---updateLoop deltaTime (State rectColors cty (r,c)) = return (State rectColors cty (r,c))
 updateLoop deltaTime st = return st
-    {-eTime' = eTime + deltaTime 
-    in 
-        if eTime' > 1.0 
-            then do 
-                let rectColors' = (tail rectColors) ++ [head rectColors]
-                return $ (State rectColors' 0 cty (r,c))  
-        else return $ (State rectColors eTime' cty (r,c))-}
-
-{- This shows an example of rendering a window to the screen using the render function above. 
-   window -> The configuration information for the window 
-   white'' -> Background color for the window 
-   fps -> the number of frames to render (you can always set this to 60)
-   initState -> The initial State configuration 
-   render -> the function that renders the State 
-   eventHanlder -> the function that handles events from the user 
-   updateLoop -> the function that updates the State of the program 
-
--} 
 
 -- get color from HomeownerType
 getColorFromType :: HomeownerType -> State -> Color
@@ -172,20 +153,6 @@ getCityFromData cityGrid = let c = read (cityGrid!!1) :: Integer
 checkValidRange :: Integer -> Bool
 checkValidRange num = if (num > 100) || (num < 0) then False
                       else True
-
-getCityFromRandom :: Integer -> Integer -> Integer -> Integer -> City
-getCityFromRandom size r b e = let emptyNum = ceiling ((fromIntegral e :: Float) / 100 * (fromIntegral size :: Float))
-                                   remaining = size - emptyNum
-                                   red = ceiling ((fromIntegral r :: Float) / 100 * (fromIntegral remaining :: Float))
-                                   blue = remaining - red
-                               in (replicate (fromIntegral emptyNum) (Home (0,0) O 0.0)) ++ 
-                                  (replicate (fromIntegral red) (Home (0,0) R 0.0)) ++ 
-                                  (replicate (fromIntegral blue) (Home (0,0) B 0.0))
-
-indexCity :: City -> Integer -> Int -> City
-indexCity [] _ _ = []
-indexCity (x:xs) size i = let Home rowcol htype sim = x
-                          in [Home (toInteger (i `div` (fromIntegral size)), toInteger (mod i (fromIntegral size))) htype sim] ++ indexCity xs size (i+1)
 
 -- The main function for displaying a window  
 main :: IO() 

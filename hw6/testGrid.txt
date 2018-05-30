@@ -1,0 +1,17 @@
+15
+15
+R R O R R O O R R O R R O O B
+O B B B O B R O B B B O B R R
+R R R R B R B O B B B O B R B
+B B B O B R R O B B B O B R O
+B R R R O B B O B B B O B R R
+B R B B O O R O B B B O B R R
+R O B O R B B O B B B O B R O
+O B B B O B R O B B B O B R O
+R R R R B R B O B B B O B R B
+B B B O B R R O B B B O B R B
+B R R R O B B O B B B O B R R
+B R B B O O R O B B B O B R O
+R O B O R B B O B B B O B R B
+R O B O R B B O B B B O B R B
+B R B B O O R O B B B O B R O
