@@ -27,7 +27,8 @@ data State = State {colors :: [Color],
                     maxSteps :: Integer,        -- max # of steps allowed
                     threshold :: Double,        -- satisfaction threshold
                     radius :: Integer,          -- neighborhood radius
-                    curRound :: Integer}        -- current round
+                    curRound :: Integer,        -- current round
+                    fromRandom :: Bool}         -- was the state initially random (vs. from txt file)
 
 {----------------- HELPER FUNCTIONS -----------------}
 
@@ -93,9 +94,9 @@ checkValidRange num = if (num > 100) || (num < 0) then False
 -- colors are [Red, Blue]
 -- calculate the simScores on the City before initializing the state with the City
 -- default values: threshold = 0.44, radius = 1, curRound = 0
-initState :: City -> (Integer, Integer) -> Integer -> State 
-initState cty (r, c) ms = let simCity = calcSimScores 0 cty 1
-                          in State [makeColorI 255 0  0 255, makeColorI 0  0 255 255] simCity cty (r, c) ms 0.44 1 0
+initState :: City -> (Integer, Integer) -> Integer -> Bool -> State 
+initState cty (r, c) ms fromRand = let simCity = calcSimScores 0 cty 1
+                          in State [makeColorI 255 0  0 255, makeColorI 0  0 255 255] simCity cty (r, c) ms 0.44 1 0 fromRand
 
 -- The number of frames per second to render
 fps:: Int 
@@ -138,27 +139,30 @@ render state = let
 eventHandler :: Event -> State -> IO State 
 
 -- This pattern matches for Key Events
-eventHandler (EventKey (Char key) Up _ _) state@(State col city initCity rowcol ms thres rad rnd) = let
-        openHomes = filter (\x -> homeowner x == O) city
+eventHandler (EventKey (Char key) Up _ _) state@(State col city initCity rowcol ms thres rad rnd fromRand) = let
+        openHomes = filter (\x -> homeowner x == O) city        
         in case key of 
         's' -> if rnd < ms then 
-                   return $ (State col (fst (simulate' 0 city openHomes rad thres)) initCity rowcol ms thres rad (rnd+1))
+                   return $ (State col (fst (simulate' 0 city openHomes rad thres)) initCity rowcol ms thres rad (rnd+1) fromRand)
                else return state
-        'r' -> return (initState initCity rowcol ms)
+        'r' -> if fromRand then do      -- fromRand is used here to determine whether we shuffle the initCity when resetting
+                   shuffledCty <- shuffle initCity
+                   return (initState (indexCity shuffledCty (fst rowcol) 0) rowcol ms fromRand)
+               else return (initState initCity rowcol ms fromRand)
         otherwise  -> return state 
 
 -- This pattern matches for Special key Events
-eventHandler (EventKey (SpecialKey key) Up _ _) state@(State col city initCity rowcol ms thres rad rnd) = case key of  
+eventHandler (EventKey (SpecialKey key) Up _ _) state@(State col city initCity rowcol ms thres rad rnd fromRand) = case key of  
         -- Handles the events for the arrow keys 
         KeyUp    -> if (thres + 0.05) > 1 then return state
-                    else return $ (State col city initCity rowcol ms (thres+0.05) rad rnd)
+                    else return $ (State col city initCity rowcol ms (thres+0.05) rad rnd fromRand)
         KeyDown  -> if (thres - 0.05) < 0 then return state
-                    else return $ (State col city initCity rowcol ms (thres-0.05) rad rnd)
+                    else return $ (State col city initCity rowcol ms (thres-0.05) rad rnd fromRand)
         KeyRight  -> if rnd > 0 then return state
-                    else return $ (State col city initCity rowcol ms thres (rad+1) rnd)
+                    else return $ (State col city initCity rowcol ms thres (rad+1) rnd fromRand)
         KeyLeft -> if rnd > 0 then return state
                     else if rad <= 1 then return state
-                    else return $ (State col city initCity rowcol ms thres (rad-1) rnd)
+                    else return $ (State col city initCity rowcol ms thres (rad-1) rnd fromRand)
 
 -- The catch all pattern
 eventHandler _ state = return state  
@@ -181,8 +185,8 @@ main = do
                let c = read (inputStrings!!1) :: Integer
                let cty = getCityFromData inputStrings
                let maxSteps = read (args!!0) :: Integer
-               playIO window white fps (initState cty (r,c) maxSteps) Main.render eventHandler updateLoop
-               
+               playIO window white fps (initState cty (r,c) maxSteps False) Main.render eventHandler updateLoop
+
            -- input grid size
            else do
                let r = read (args!!1) :: Integer
@@ -195,7 +199,7 @@ main = do
                    shuffledCty <- shuffle cty
                    let indexedCty = indexCity shuffledCty r 0
                    let maxSteps = read (args!!0) :: Integer
-                   playIO window white fps (initState indexedCty (r,c) maxSteps) Main.render eventHandler updateLoop
+                   playIO window white fps (initState indexedCty (r,c) maxSteps True) Main.render eventHandler updateLoop
                else do putStrLn "Invalid percentage values. Exiting."
        else do
            putStrLn "Invalid arguments. Exiting."
