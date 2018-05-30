@@ -6,7 +6,7 @@ import Graphics.Gloss
 
 {- Needed to retrieve command line arguments -}
 import System.Environment   
-
+import Shuffle
 import Data.Char
 import ModelCalcs
 
@@ -169,6 +169,24 @@ getCityFromData cityGrid = let c = read (cityGrid!!1) :: Integer
                                (x:y:xs) = cityGrid
                            in makeCityBodyList 0 c (flattenList xs)
 
+checkValidRange :: Integer -> Bool
+checkValidRange num = if (num > 100) || (num < 0) then False
+                      else True
+
+getCityFromRandom :: Integer -> Integer -> Integer -> Integer -> City
+getCityFromRandom size r b e = let emptyNum = ceiling ((fromIntegral e :: Float) / 100 * (fromIntegral size :: Float))
+                                   remaining = size - emptyNum
+                                   red = ceiling ((fromIntegral r :: Float) / 100 * (fromIntegral remaining :: Float))
+                                   blue = remaining - red
+                               in (replicate (fromIntegral emptyNum) (Home (0,0) O 0.0)) ++ 
+                                  (replicate (fromIntegral red) (Home (0,0) R 0.0)) ++ 
+                                  (replicate (fromIntegral blue) (Home (0,0) B 0.0))
+
+indexCity :: City -> Integer -> Int -> City
+indexCity [] _ _ = []
+indexCity (x:xs) size i = let Home rowcol htype sim = x
+                          in [Home (toInteger (i `div` (fromIntegral size)), toInteger (mod i (fromIntegral size))) htype sim] ++ indexCity xs size (i+1)
+
 -- The main function for displaying a window  
 main :: IO() 
 main = do
@@ -185,8 +203,18 @@ main = do
                playIO window white fps (initState cty (r,c) maxSteps) Main.render eventHandler updateLoop
            -- input grid size
            else do
-               putStrLn "asdf."
-               --playIO window white fps initState (Main.render cty) eventHandler updateLoop
+               let r = read (args!!1) :: Integer
+               let c = read (args!!1) :: Integer
+               let rPerc = read (args!!2) :: Integer
+               let bPerc = read (args!!3) :: Integer
+               let ePerc = read (args!!4) :: Integer
+               if (checkValidRange rPerc) && (checkValidRange bPerc) && (checkValidRange ePerc) then do
+                   let cty = getCityFromRandom (r*r) rPerc bPerc ePerc
+                   shuffledCty <- shuffle cty
+                   let indexedCty = indexCity shuffledCty r 0
+                   let maxSteps = read (args!!0) :: Integer
+                   playIO window white fps (initState indexedCty (r,c) maxSteps) Main.render eventHandler updateLoop
+               else do putStrLn "Invalid percentage values. Exiting."
        else do
            putStrLn "Invalid arguments. Exiting."
            return ()
