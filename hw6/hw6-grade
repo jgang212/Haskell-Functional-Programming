@@ -1,0 +1,29 @@
+/* hw6 guideline */
+/* MPCS 51400, Spring 2018 */
+
+/* === Evaluation === */
+/* Schelling's algorithm  		      27/27 */
+/* Loading from file 			       10/10 */ 
+/* Command-line Parameters 		       8/8  */ 
+/* Gloss Graphical User Interface              25/25 */  
+      (Display Grids, 
+       Step, 
+       Reset, 
+/* Modification of GUI Parameters              5/5  */ 
+   (Threshold & R (Neighbor Size) 
+
+/* === Style === */
+/* Style features   21/25 */ 
+    E.g.: 
+    -modularity
+    -code reuse
+    -documentation, 
+    -naming conventions
+
+You have a lot of "magic numbers" (i.e., hard-coded values) in your render code. It's better to assign those to constant variables or arguments in your state. This way you if you need to change something you don't have to change it many different areas. 
+  
+
+/* _TOTAL-SCORE_    97/100 */
+
+/* graded by Lamont */
+
